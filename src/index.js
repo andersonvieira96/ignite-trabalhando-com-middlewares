@@ -10,19 +10,74 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+
+  const userAccount = users.find(user => user.username === username );
+
+  if (!userAccount) {
+    return response.status(404).json({ error: 'Username no exists' });
+  }
+
+  request.user = userAccount;
+
+  next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+  if(!user.pro && user.todos.length >= 10 ){
+    return response.status(403).json({ error: 'You not have permission for create more ToDos' });
+  }
+  next();
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  if (!isUUID(id)) {
+    return response.status(400).json({ error: 'Id invalid' });
+  }
+
+  const userAccount = users.find(user => user.username === username );
+
+  if (!userAccount) {
+    return response.status(404).json({ error: 'Username no exists' });
+  }
+
+  const todo = userAccount.todos.find(todo => todo.id === id);
+
+  if (!todo) {
+    return response.status(404).json({ error: 'todo no exists' });
+  }
+
+  request.todo = todo;
+  request.user = userAccount;
+  next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+
+  const userAccount = users.find(user => user.id === id );
+
+  if (!userAccount) {
+    return response.status(404).json({ error: 'Username no exists' });
+  }
+
+  request.user = userAccount;
+
+  next();
+}
+
+function isUUID ( uuid ) {
+  let s = "" + uuid;
+
+  s = s.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+  if (s === null) {
+    return false;
+  }
+  return true;
 }
 
 app.post('/users', (request, response) => {
